@@ -773,7 +773,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 	private function __renderCairo (renderer:CairoRenderer):Void {
 		
 		#if lime_cairo
-		__updateCacheBitmap (renderer, !__worldColorTransform.__isDefault ());
+		__updateCacheBitmap (renderer, /*!__worldColorTransform.__isDefault ()*/ false);
 		
 		if (__cacheBitmap != null && !__isCacheBitmapRender) {
 			
@@ -808,7 +808,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 		
 		if (mask == null || (mask.width > 0 && mask.height > 0)) {
 			
-			__updateCacheBitmap (renderer, !__worldColorTransform.__isDefault ());
+			__updateCacheBitmap (renderer, /*!__worldColorTransform.__isDefault ()*/ false);
 			
 			if (__cacheBitmap != null && !__isCacheBitmapRender) {
 				
@@ -840,7 +840,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 	
 	private function __renderDOM (renderer:DOMRenderer):Void {
 		
-		__updateCacheBitmap (renderer, !__worldColorTransform.__isDefault ());
+		__updateCacheBitmap (renderer, /*!__worldColorTransform.__isDefault ()*/ false);
 		
 		if (__cacheBitmap != null && !__isCacheBitmapRender) {
 			
@@ -1164,14 +1164,18 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 		
 		if (__isCacheBitmapRender) return false;
 		
-		if (cacheAsBitmap || (renderer.__type != OPENGL && !__worldColorTransform.__isDefault ())) {
+		var colorTransform = __tempColorTransform;
+		colorTransform.__copyFrom (__worldColorTransform);
+		if (renderer.__worldColorTransform != null) colorTransform.__combine (renderer.__worldColorTransform);
+		
+		if (cacheAsBitmap || (renderer.__type != OPENGL && !colorTransform.__isDefault ())) {
 			
 			var matrix = null, rect = null;
 			
 			__update (false, true);
 			
-			var needRender = (__cacheBitmap == null || (__renderDirty && (force || (__children != null && __children.length > 0) || (__graphics != null && __graphics.__dirty))) || opaqueBackground != __cacheBitmapBackground || !__cacheBitmapColorTransform.__equals (__worldColorTransform));
-			var updateTransform = (needRender || (!__cacheBitmap.__worldTransform.equals (__worldTransform)));
+			var needRender = (__cacheBitmap == null || (__renderDirty && (force || (__children != null && __children.length > 0) || (__graphics != null && __graphics.__dirty))) || opaqueBackground != __cacheBitmapBackground || (renderer.__type != OPENGL && !__cacheBitmapColorTransform.__equals (colorTransform)));
+			var updateTransform = (needRender || (renderer.__type == OPENGL && !__cacheBitmap.__worldTransform.equals (__worldTransform)));
 			var hasFilters = __filters != null;
 			
 			if (hasFilters && !needRender) {
@@ -1388,6 +1392,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 					
 				}
 				
+				if (__cacheBitmapColorTransform == null) __cacheBitmapColorTransform = new ColorTransform ();
+				
 				__cacheBitmapRenderer.__stage = stage;
 				
 				__cacheBitmapRenderer.__allowSmoothing = renderer.__allowSmoothing;
@@ -1400,7 +1406,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 				__cacheBitmapRenderer.__worldTransform.tx -= offsetX;
 				__cacheBitmapRenderer.__worldTransform.ty -= offsetY;
 				
-				__cacheBitmapRenderer.__worldColorTransform.__copyFrom (__worldColorTransform);
+				__cacheBitmapRenderer.__worldColorTransform.__copyFrom (colorTransform);
 				__cacheBitmapRenderer.__worldColorTransform.__invert ();
 				
 				__isCacheBitmapRender = true;
@@ -1517,8 +1523,10 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 					parentRenderer.__blendMode = NORMAL;
 					parentRenderer.__setBlendMode (cacheBlendMode);
 					parentRenderer.__copyShader (childRenderer);
-					parentRenderer.__resumeClipAndMask ();
+					parentRenderer.__resumeClipAndMask (childRenderer);
 					parentRenderer.setViewport ();
+					
+					__cacheBitmapColorTransform.__copyFrom (colorTransform);
 					
 				} else {
 					
@@ -1613,18 +1621,17 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 						
 					}
 					
+					__cacheBitmapColorTransform.__copyFrom (colorTransform);
+					
+					if (!__cacheBitmapColorTransform.__isDefault ()) {
+						
+						__cacheBitmapData.colorTransform (__cacheBitmapData.rect, __cacheBitmapColorTransform);
+						
+					}
+					
 				}
 				
 				__isCacheBitmapRender = false;
-				
-				if (__cacheBitmapColorTransform == null) __cacheBitmapColorTransform = new ColorTransform ();
-				__cacheBitmapColorTransform.__copyFrom (__worldColorTransform);
-				
-				if (!__cacheBitmapColorTransform.__isDefault () && __cacheBitmapRenderer.__type != OPENGL) {
-					
-					__cacheBitmapData.colorTransform (__cacheBitmapData.rect, __cacheBitmapColorTransform);
-					
-				}
 				
 			}
 			
