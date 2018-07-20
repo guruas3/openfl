@@ -692,22 +692,22 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	
 	inline function __cleanupRemovedChildren () {
-
+		
 		for (orphan in __removedChildren) {
-
+			
 			if (orphan.stage == null) {
-
+				
 				orphan.__cleanup ();
-
+				
 			}
-
+			
 		}
-
+		
 		__removedChildren.length = 0;
-
+		
 	}
-
-
+	
+	
 	@:noCompletion private override function __dispatchChildren (event:Event):Void {
 		
 		if (__children != null) {
@@ -955,6 +955,8 @@ class DisplayObjectContainer extends InteractiveObject {
 	@:noCompletion private override function __renderCairo (renderer:CairoRenderer):Void {
 		
 		#if lime_cairo
+		__cleanupRemovedChildren ();
+
 		if (!__renderable || __worldAlpha <= 0) return;
 		
 		super.__renderCairo (renderer);
@@ -983,9 +985,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			}
 			
 		}
-		
-		__cleanupRemovedChildren ();
-		
+
 		renderer.__popMaskObject (this);
 		#end
 		
@@ -1013,6 +1013,8 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	@:noCompletion private override function __renderCanvas (renderer:CanvasRenderer):Void {
 		
+		__cleanupRemovedChildren ();
+
 		if (!__renderable || __worldAlpha <= 0 || (mask != null && (mask.width <= 0 || mask.height <= 0))) return;
 		
 		#if !neko
@@ -1043,9 +1045,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			}
 			
 		}
-		
-		__cleanupRemovedChildren ();
-		
+
 		renderer.__popMaskObject (this);
 		
 		#end
@@ -1072,6 +1072,8 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	@:noCompletion private override function __renderDOM (renderer:DOMRenderer):Void {
 		
+		__cleanupRemovedChildren ();
+
 		super.__renderDOM (renderer);
 		
 		if (__cacheBitmap != null && !__isCacheBitmapRender) return;
@@ -1098,9 +1100,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			}
 			
 		}
-		
-		__cleanupRemovedChildren ();
-		
+
 		renderer.__popMaskObject (this);
 		
 	}
@@ -1108,17 +1108,19 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	@:noCompletion private override function __renderDOMClear (renderer:DOMRenderer):Void {
 		
+		__cleanupRemovedChildren ();
+
 		for (child in __children) {
 			child.__renderDOMClear (renderer);
 		}
 		
-		__cleanupRemovedChildren ();
-		
 	}
-	
-	
+
+
 	@:noCompletion private override function __renderGL (renderer:OpenGLRenderer):Void {
-		
+
+		__cleanupRemovedChildren ();
+
 		if (!__renderable || __worldAlpha <= 0) return;
 		
 		super.__renderGL (renderer);
@@ -1152,9 +1154,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			}
 			
 		}
-		
-		__cleanupRemovedChildren ();
-		
+
 		if (__children.length > 0) {
 			
 			// renderer.filterManager.popObject (this);
@@ -1167,6 +1167,8 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	@:noCompletion private override function __renderGLMask (renderer:OpenGLRenderer):Void {
 		
+		__cleanupRemovedChildren ();
+
 		if (__graphics != null) {
 			
 			//GLGraphics.renderMask (__graphics, renderer);
@@ -1179,8 +1181,6 @@ class DisplayObjectContainer extends InteractiveObject {
 			child.__renderGLMask (renderer);
 			
 		}
-		
-		__cleanupRemovedChildren ();
 
 	}
 	
