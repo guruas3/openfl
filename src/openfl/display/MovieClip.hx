@@ -210,6 +210,7 @@ class MovieClip extends Sprite #if (openfl_dynamic && haxe_ver < "4.0.0") implem
 			
 			if (__lastFrameScriptEval == nextFrame) {
 				
+				super.__enterFrame (deltaTime);
 				return;
 				
 			}
@@ -220,6 +221,7 @@ class MovieClip extends Sprite #if (openfl_dynamic && haxe_ver < "4.0.0") implem
 					
 					if (!__evaluateFrameScripts (__totalFrames)) {
 						
+						super.__enterFrame (deltaTime);
 						return;
 						
 					}
@@ -230,6 +232,7 @@ class MovieClip extends Sprite #if (openfl_dynamic && haxe_ver < "4.0.0") implem
 				
 				if (!__evaluateFrameScripts (nextFrame)) {
 					
+					super.__enterFrame (deltaTime);
 					return;
 					
 				}
@@ -714,6 +717,7 @@ class MovieClip extends Sprite #if (openfl_dynamic && haxe_ver < "4.0.0") implem
 			__timeElapsed = (__timeElapsed % __frameTime);
 			
 		} else {
+			
 			
 			nextFrame = __currentFrame + 1;
 			if (nextFrame > __totalFrames) nextFrame = 1;
