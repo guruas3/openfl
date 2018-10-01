@@ -1384,7 +1384,16 @@ class GLContext3D {
 		}
 		
 	}
-	
+
+	public static function __updateDepthAndStencilStateTEMP (context:Context3D):Void {
+
+		GLContext3D.context = context;
+		var renderer:OpenGLRenderer = cast context.__renderer;
+		GLContext3D.gl = renderer.__gl;
+
+		__updateDepthAndStencilState ();
+
+	}
 	
 	private static function __updateScissorRectangle ():Void {
 		
@@ -1435,6 +1444,14 @@ class GLContext3D {
 		GLUtils.CheckGLError ();
 		
 	}
-	
-	
+
+	public static function __updateScissorRectangleTEMP (context:Context3D):Void {
+
+		GLContext3D.context = context;
+		var renderer:OpenGLRenderer = cast context.__renderer;
+		GLContext3D.gl = renderer.__gl;
+
+		__updateScissorRectangle ();
+
+	}
 }
