@@ -1,4 +1,4 @@
-package openfl.display;
+package openfl.display; #if !flash
 
 
 import haxe.CallStack;
@@ -332,20 +332,20 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 	@:noCompletion public function addRenderer (renderer:Renderer):Void {
-		
+
 		if (this.window == null || this.window.renderer != renderer) return;
-		
+
 		renderer.onRender.add (render.bind (renderer));
 		renderer.onContextLost.add (onRenderContextLost.bind (renderer));
 		renderer.onContextRestored.add (onRenderContextRestored.bind (renderer));
-		
+
 	}
-	
-	
+
+
 	@:noCompletion public function addWindow (window:Window):Void {
-		
+
 		if (this.window != window) return;
-		
+
 		window.onActivate.add (onWindowActivate.bind (window));
 		window.onClose.add (onWindowClose.bind (window), false, -9000);
 		window.onCreate.add (onWindowCreate.bind (window));
@@ -370,53 +370,53 @@ class Stage extends DisplayObjectContainer implements IModule {
 		window.onRestore.add (onWindowRestore.bind (window));
 		window.onTextEdit.add (onTextEdit.bind (window));
 		window.onTextInput.add (onTextInput.bind (window));
-		
+
 		if (window.id > -1) {
-			
+
 			onWindowCreate (window);
-			
+
 		}
-		
+
 	}
-	
-	
+
+
 	@:noCompletion public function registerModule (application:Application):Void {
-		
+
 		application.onExit.add (onModuleExit, false, 0);
 		application.onUpdate.add (update);
-		
+
 		for (gamepad in Gamepad.devices) {
-			
+
 			__onGamepadConnect (gamepad);
-			
+
 		}
-		
+
 		Gamepad.onConnect.add (__onGamepadConnect);
 		Touch.onStart.add (onTouchStart);
 		Touch.onMove.add (onTouchMove);
 		Touch.onEnd.add (onTouchEnd);
-		
+
 	}
-	
-	
+
+
 	@:noCompletion public function removeRenderer (renderer:Renderer):Void { }
 	@:noCompletion public function removeWindow (window:Window):Void { }
 	@:noCompletion public function setPreloader (preloader:Preloader):Void { }
-	
-	
+
+
 	@:noCompletion public function unregisterModule (application:Application):Void {
-		
+
 		application.onExit.remove (onModuleExit);
 		application.onUpdate.remove (update);
-		
+
 		Gamepad.onConnect.remove (__onGamepadConnect);
 		Touch.onStart.remove (onTouchStart);
 		Touch.onMove.remove (onTouchMove);
 		Touch.onEnd.remove (onTouchEnd);
-		
+
 	}
-	
-	
+
+
 	public override function invalidate ():Void {
 		
 		__invalidated = true;
@@ -424,7 +424,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 	}
 	
-	
+
 	public override function localToGlobal (pos:Point):Point {
 		
 		return pos.clone ();
@@ -589,6 +589,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
+		dispatchPendingMouseMove ();
+
 		var type = switch (button) {
 			
 			case 1: MouseEvent.MIDDLE_MOUSE_DOWN;
@@ -601,15 +603,28 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 	}
 	
-	
+	var hasPendingMouseMove = false;
+	var pendingMouseMoveX:Int;
+	var pendingMouseMoveY:Int;
+
 	public function onMouseMove (window:Window, x:Float, y:Float):Void {
 		
 		if (this.window == null || this.window != window) return;
 		
-		__onMouse (MouseEvent.MOUSE_MOVE, Std.int (x * window.scale), Std.int (y * window.scale), 0);
-		
+		hasPendingMouseMove = true;
+		pendingMouseMoveX = Std.int (x * window.scale);
+		pendingMouseMoveY = Std.int (y * window.scale);
+
 	}
-	
+
+	function dispatchPendingMouseMove () {
+		
+		if (hasPendingMouseMove) {
+			__onMouse (MouseEvent.MOUSE_MOVE, pendingMouseMoveX, pendingMouseMoveY, 0);
+			hasPendingMouseMove = false;
+		}
+
+	}
 	
 	public function onMouseMoveRelative (window:Window, x:Float, y:Float):Void {
 		
@@ -622,6 +637,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
+		dispatchPendingMouseMove ();
+
 		var type = switch (button) {
 			
 			case 1: MouseEvent.MIDDLE_MOUSE_UP;
@@ -644,8 +661,10 @@ class Stage extends DisplayObjectContainer implements IModule {
 	public function onMouseWheel (window:Window, deltaX:Float, deltaY:Float):Void {
 		
 		if (this.window == null || this.window != window) return;
-		
-		__onMouseWheel (Std.int (deltaX * window.scale), Std.int (deltaY * window.scale));
+
+		dispatchPendingMouseMove ();
+
+		__onMouseWheel (Std.int (deltaX), Std.int (deltaY));
 		
 	}
 	
@@ -929,7 +948,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 	public function render (renderer:Renderer):Void {
-		
+
 		if (renderer.window == null || renderer.window != window) return;
 		
 		if (__rendering) return;
@@ -982,7 +1001,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			}
 			
 			if (__renderer.__type == CAIRO) {
-				
+
 				switch (renderer.context) {
 					
 					case CAIRO (cairo):
@@ -990,9 +1009,9 @@ class Stage extends DisplayObjectContainer implements IModule {
 						#if lime_cairo
 						cast (__renderer, CairoRenderer).cairo = cairo;
 						#end
-					
+
 					default:
-						
+
 				}
 				
 			}
@@ -1000,7 +1019,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			__renderer.__render (this);
 			
 		} else {
-			
+
 			renderer.onRender.cancel ();
 			
 		}
@@ -1019,6 +1038,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		__deltaTime = deltaTime;
 		
+		dispatchPendingMouseMove ();
+
 	}
 	
 	
@@ -1058,14 +1079,14 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		#if (js && html5)
 		var pixelRatio = 1;
-		
+
 		if (window.config != null && Reflect.hasField (window.config, "allowHighDPI") && window.config.allowHighDPI) {
 			
 			pixelRatio = untyped window.devicePixelRatio || 1;
 			
 		}
 		#end
-		
+
 		switch (window.renderer.context) {
 			
 			case OPENGL (gl):
@@ -1102,11 +1123,11 @@ class Stage extends DisplayObjectContainer implements IModule {
 				#end
 			
 			case CONSOLE (ctx):
-				
+
 				#if lime_console
 				__renderer = new ConsoleRenderer (ctx);
 				#end
-			
+
 			default:
 			
 		}
@@ -1347,6 +1368,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	private function __onKey (type:String, keyCode:KeyCode, modifier:KeyModifier):Void {
 		
+		dispatchPendingMouseMove ();
+
 		MouseEvent.__altKey = modifier.altKey;
 		MouseEvent.__commandKey = modifier.metaKey;
 		MouseEvent.__ctrlKey = modifier.ctrlKey;
@@ -1607,7 +1630,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			if (__mouseOverTarget != null) {
 				
 				event = MouseEvent.__create (MouseEvent.MOUSE_OUT, button, __mouseX, __mouseY, __mouseOverTarget.__globalToLocal (targetPoint, localPoint), cast __mouseOverTarget);
-				__dispatchStack (event, __mouseOutStack);				
+				__dispatchStack (event, __mouseOutStack);
 				
 			}
 			
@@ -2079,7 +2102,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 	}
 	
-	
+
 	
 	
 	// Get & Set Methods
@@ -2217,7 +2240,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 	private function get_frameRate ():Float {
-		
+
 		if (application != null) {
 			
 			return application.frameRate;
@@ -2230,7 +2253,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 	private function set_frameRate (value:Float):Float {
-		
+
 		if (application != null) {
 			
 			return application.frameRate = value;
@@ -2365,3 +2388,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 }
+
+
+#else
+typedef Stage = flash.display.Stage;
+#end
