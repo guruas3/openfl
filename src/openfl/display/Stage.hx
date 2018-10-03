@@ -75,7 +75,7 @@ typedef Element = Dynamic;
 
 class Stage extends DisplayObjectContainer implements IModule {
 	
-	
+
 	public var align:StageAlign;
 	public var allowsFullScreen (default, null):Bool;
 	public var allowsFullScreenInteractive (default, null):Bool;
@@ -87,7 +87,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	#if commonjs
 	public var element:Element;
 	#end
-	
+
 	public var focus (get, set):InteractiveObject;
 	public var frameRate (get, set):Float;
 	public var fullScreenHeight (get, never):UInt;
@@ -213,7 +213,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			if (!Reflect.hasField (windowConfig, "stencilBuffer")) windowConfig.stencilBuffer = true;
 			if (!Reflect.hasField (windowConfig, "depthBuffer")) windowConfig.depthBuffer = true;
 			if (!Reflect.hasField (windowConfig, "background")) windowConfig.background = null;
-			
+
 			window = new Window (windowConfig);
 			window.stage = this;
 			
@@ -872,7 +872,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	public function onWindowLeave (window:Window):Void {
 		
 		if (this.window == null || this.window != window || MouseEvent.__buttonDown) return;
-		
+
 		__dispatchEvent (new Event (Event.MOUSE_LEAVE));
 		
 	}
